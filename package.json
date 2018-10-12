@@ -13,6 +13,8 @@
   },
   "homepage": "https://github.com/ForstaLabs/relay-rest-gateway#readme",
   "dependencies": {
-    "librelay": "5.2.4"
+    "express": "4.16.4",
+    "librelay": "5.2.4",
+    "morgan": "1.9.1"
   }
 }
