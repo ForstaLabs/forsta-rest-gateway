@@ -1,0 +1,18 @@
+{
+  "name": "relay-rest-gateway",
+  "version": "1.0.0",
+  "description": "REST gateway for librelay",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ForstaLabs/relay-rest-gateway.git"
+  },
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/ForstaLabs/relay-rest-gateway/issues"
+  },
+  "homepage": "https://github.com/ForstaLabs/relay-rest-gateway#readme",
+  "dependencies": {
+    "librelay": "5.2.4"
+  }
+}
