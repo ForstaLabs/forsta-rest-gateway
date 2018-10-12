@@ -1,13 +1,10 @@
 
-const process = require('process');
-const relay = require('librelay');
-
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const vaultApi = require('./vault-api');
 const path = require('path');
 const process = require('process');
+const relay = require('librelay');
 
 const root = `${__dirname}/../../dist`;
 const build = require(`${root}/build.json`);
