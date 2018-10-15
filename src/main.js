@@ -1,4 +1,5 @@
 
+const api = require('./api');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
@@ -22,8 +23,7 @@ async function main() {
     const app = express();
     app.use(morgan('dev')); // logging
     app.use(bodyParser.json());
-    //this.app.use('/api/onboard/', (new api.OnboardAPIV1({server: this})).router);
-    //this.app.use('/api/auth/', (new api.AuthenticationAPIV1({server: this})).router);
+    app.use('/account/', (new api.account.AccountV1({})).router);
     app.use((req, res, next) => {
         res.status(404).json({
             error: 'bad_request',
@@ -31,9 +31,11 @@ async function main() {
         });
     });
     app.use((error, req, res, next) => {
+        console.error("Server error:", error);
+        const message = error.message || error.toString();
         res.status(500).json({
             error: 'server',
-            message: error
+            message
         });
     });
     app.listen(port, listenAddr);
