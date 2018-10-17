@@ -26,6 +26,7 @@ async function main() {
     app.use('/auth/', (new api.auth.AuthenticationV1({})).router);
     app.use('/account/', (new api.account.AccountV1({})).router);
     app.use('/devices/', (new api.devices.DevicesV1({})).router);
+    app.use('/messages/', (new api.messages.MessagesV1({})).router);
     app.use((req, res, next) => {
         res.status(404).json({
             error: 'bad_request',

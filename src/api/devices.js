@@ -35,9 +35,20 @@ class DevicesV1 extends Handler {
         if (!result) {
             this.throwBadRequest(res, 404, 'Invalid registering id');
         }
+        const setinel = new Object();
+        let status;
+        try {
+            const done = await Promise.race([result.done, setinel]);
+            status = done === setinel ? 'pending' : 'complete';
+        } catch(e) {
+            console.warning("Registration error detected:", e);
+            status = e.message;
+        }
+        // XXX/TODO cleanup if done?
         return {
             id: req.params.id,
             waiting: result.waiting,
+            status
         };
     }
 }
