@@ -31,7 +31,7 @@ class AuthenticationV1 extends Handler {
                 this.throwBadRequest(res, 412, "Missing `password` value");
             }
             await relay.AtlasClient.authenticateViaPassword(userTag, password);
-        } else if (type === 'code') {
+        } else if (type === 'sms') {
             const code = body.code;
             if (!code) {
                 this.throwBadRequest(res, 412, "Missing `code` value");

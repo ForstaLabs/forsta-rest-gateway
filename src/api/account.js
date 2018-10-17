@@ -1,6 +1,7 @@
 const Handler = require('./handler');
 const relay = require('librelay');
 
+
 class AccountV1 extends Handler {
 
     constructor(options) {
@@ -15,8 +16,7 @@ class AccountV1 extends Handler {
     }
 
     async onCreateAccount(req, res) {
-        const name = req.body.name;
-        debugger; // XXX look for info in request headers to use for name if ommitted
+        const name = req.body.name || req.headers['user-agent'].split(/[\s/-]/)[0];
         await relay.registerAccount({name});
     }
 }

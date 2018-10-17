@@ -1,9 +1,9 @@
 const account = require('./account');
 const devices = require('./devices');
-const authentication = require('./authentication');
+const auth = require('./auth');
 
 module.exports = {
     account,
     devices,
-    authentication
+    auth
 };
