@@ -2,7 +2,7 @@ const express = require('express');
 
 
 class Handler {
-    constructor({timeout=1000}) {
+    constructor({timeout=5000}) {
         this.timeout = timeout;  // ms
         this.router = express.Router();
     }
@@ -38,7 +38,7 @@ class Handler {
                     });
                 }, this.timeout);
             }
-        }
+        };
     }
 
     throwBadRequest(res, code=400, message="Bad Request", extra={}) {
