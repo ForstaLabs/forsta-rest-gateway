@@ -2,8 +2,9 @@ const express = require('express');
 
 
 class Handler {
-    constructor({timeout=5000}) {
+    constructor({timeout=5000, app}) {
         this.timeout = timeout;  // ms
+        this.app = app;
         this.router = express.Router();
     }
 
