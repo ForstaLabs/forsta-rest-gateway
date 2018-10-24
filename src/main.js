@@ -5,6 +5,14 @@ const express = require('express');
 const expressWS = require('express-ws');
 const morgan = require('morgan');
 const process = require('process');
+const feathers = require('@feathersjs/feathers');
+const app = feathers();
+
+app.use('auth', {
+    get: async name => {
+        
+    }
+}
 
 const port = process.env.PORT || '8086';
 const listenAddr = process.env.LISTEN_ADDR || '127.0.0.1';
