@@ -2,6 +2,14 @@ const Handler = require('./handler');
 const relay = require('librelay');
 
 
+class OutgoingV1 {
+    async create(data, params) {
+        const sender = await relay.MessageSender.factory();
+        return await sender.send(data);
+    }
+}
+
+
 class MessagesV1 extends Handler {
 
     constructor(options) {
@@ -64,5 +72,6 @@ class MessagesV1 extends Handler {
 
 
 module.exports = {
-    MessagesV1
+    MessagesV1,
+    OutgoingV1
 };
