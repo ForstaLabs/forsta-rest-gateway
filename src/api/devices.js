@@ -1,39 +1,38 @@
-const Handler = require('./handler');
+const errors = require('@feathersjs/errors');
 const relay = require('librelay');
 const uuid4 = require('uuid/v4');
 
+const registerResults = new Map();
 
-class DevicesV1 extends Handler {
 
-    constructor(options) {
-        super(options);
-        this.router.get('/v1', this.asyncRoute(this.onViewDevices));
-        this.router.post('/v1', this.asyncRoute(this.onRegisterDevice));
-        this.router.get('/registering/v1/:id', this.asyncRoute(this.onViewRegisteringStatus));
-        this.registerResults = new Map();
-    }
+class DevicesV1 {
 
-    async onViewDevices(req, res) {
+    async find(id, params) {
         const atlasClient = await relay.AtlasClient.factory();
         return await atlasClient.getDevices();
     }
 
-    async onRegisterDevice(req, res) {
-        const name = req.body.name; // XXX use request headers if not present.
-        const autoProvision = req.body.autoProvision;
+    async create(data, params) {
+        const name = data.name;  // XXX use request headers if not present.
+        const autoProvision = data.autoProvision;
         const id = uuid4();
         const result = await relay.registerDevice({name, autoProvision});
-        this.registerResults.set(id, result);
+        registerResults.set(id, result);
+        debugger;
         return {
             registeringId: id,
-            registeringUrn: `${req.baseUrl}/registering/v1/${id}`
+            registeringUrn: `/devices/registering/v1/${id}`
         };
     }
+}
 
-    async onViewRegisteringStatus(req, res) {
-        const result = this.registerResults.get(req.params.id);
+
+class DevicesRegisteringV1 {
+
+    async get(id, params) {
+        const result = registerResults.get(id);
         if (!result) {
-            this.throwBadRequest(res, 404, 'Invalid registering id');
+            throw new errors.NotFound('Invalid registering id');
         }
         const setinel = new Object();
         let status;
@@ -46,7 +45,7 @@ class DevicesV1 extends Handler {
         }
         // XXX/TODO cleanup if done?
         return {
-            id: req.params.id,
+            id,
             waiting: result.waiting,
             status
         };
@@ -55,5 +54,6 @@ class DevicesV1 extends Handler {
 
 
 module.exports = {
-    DevicesV1
+    DevicesV1,
+    DevicesRegisteringV1
 };

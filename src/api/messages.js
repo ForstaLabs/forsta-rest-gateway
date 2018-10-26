@@ -1,4 +1,3 @@
-const Handler = require('./handler');
 const relay = require('librelay');
 
 
@@ -10,10 +9,9 @@ class OutgoingV1 {
 }
 
 
-class MessagesV1 extends Handler {
+class MessagesV1 {
 
     constructor(options) {
-        super(options);
         this.router.post('/outgoing/v1', this.asyncRoute(this.onOutgoingPost));
         this.router.ws('/incoming/v1', this.onIncomingConnect.bind(this));
         this.wsClients = new Map();
