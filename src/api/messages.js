@@ -1,4 +1,5 @@
 const relay = require('librelay');
+const socketio = require('@feathersjs/socketio');
 
 
 class OutgoingV1 {
@@ -9,12 +10,26 @@ class OutgoingV1 {
 }
 
 
-class MessagesV1 {
+class IncomingV1 {
 
-    constructor(options) {
-        this.router.post('/outgoing/v1', this.asyncRoute(this.onOutgoingPost));
-        this.router.ws('/incoming/v1', this.onIncomingConnect.bind(this));
+    constructor(a, b, c) {
+        debugger;
+        //this.router.post('/outgoing/v1', this.asyncRoute(this.onOutgoingPost));
+        //this.router.ws('/incoming/v1', this.onIncomingConnect.bind(this));
         this.wsClients = new Map();
+    }
+
+    setup(app, path) {
+        debugger;
+        app.of('/messages/incoming/v2').on('connection', this.onConnection.bind(this));
+    }
+
+    connection(a, b, c) {
+        debugger;
+    }
+
+    onConnection(a, b, c) {
+        debugger;
     }
 
     async onIncomingConnect(ws, req) {
@@ -70,6 +85,6 @@ class MessagesV1 {
 
 
 module.exports = {
-    MessagesV1,
-    OutgoingV1
+    OutgoingV1,
+    IncomingV1
 };
