@@ -12,74 +12,54 @@ class OutgoingV1 {
 
 class IncomingV1 {
 
-    constructor(a, b, c) {
-        debugger;
-        //this.router.post('/outgoing/v1', this.asyncRoute(this.onOutgoingPost));
-        //this.router.ws('/incoming/v1', this.onIncomingConnect.bind(this));
-        this.wsClients = new Map();
-    }
-
     setup(app, path) {
-        debugger;
-        app.of('/messages/incoming/v2').on('connection', this.onConnection.bind(this));
+        this.socketNS = app.io.of(path);
+        this.socketNS.on('connection', this.onConnection.bind(this));
     }
 
-    connection(a, b, c) {
-        debugger;
-    }
-
-    onConnection(a, b, c) {
-        debugger;
-    }
-
-    async onIncomingConnect(ws, req) {
+    async onConnection(socket) {
         if (!this.reciever) {
             this.reciever = await relay.MessageReceiver.factory();
             //this.reciever.addEventListener('keychange', this.onRecvKeyChange);
-            this.reciever.addEventListener('message', this.onRecvMessage.bind(this));
+            this.reciever.addEventListener('message', this.onMessage.bind(this));
             //this.reciever.addEventListener('receipt', this.onRecvReceipt);
-            this.reciever.addEventListener('sent', this.onRecvSent.bind(this));
+            this.reciever.addEventListener('sent', this.onSent.bind(this));
             //this.reciever.addEventListener('read', this.onRecvRead);
             //this.reciever.addEventListener('closingsession', this.onRecvClosingSession);
-            this.reciever.addEventListener('error', this.onRecvError.bind(this));
+            this.reciever.addEventListener('error', this.onError.bind(this));
             await this.reciever.connect();
         }
-        console.info("Client connected:", req.ip);
-        this.wsClients.set(ws, {req});
-        ws.on('message', data => {
-            console.error("Client tried to send data to us!");
-            ws.close();
-        });
-        ws.on('close', () => {
+        console.info("Client connected:", socket.ip);
+        socket.join(this.path);
+        socket.on('close', () => {
             console.warn("Client disconnected: ", req.ip);
             this.wsClients.delete(ws);
         });
     }
 
-    onRecvMessage(ev) {
+    onMessage(ev) {
         debugger;
-        for (const ws of this.wsClients.keys()) {
-            ws.send('message', ev);
-        }
+        this.socketNS.emit('message', ev);
     }
 
-    onRecvSent(ev) {
-        debugger;
-        for (const ws of this.wsClients.keys()) {
-            ws.send('message', ev);
+    async onSent(ev) {
+        for (const x of ev.data.message.attachments) {
+            x.data = await this.reciever.fetchAttachment(x);
         }
+        this.socketNS.emit('sent', {
+            destination: ev.data.destination,
+            expirationStartTimestamp: ev.data.expirationStartTimestamp,
+            body: JSON.parse(ev.data.message.body),
+            attachments: ev.data.message.attachments,
+            source: ev.data.source,
+            sourceDevice: ev.data.sourceDevice,
+            timestamp: ev.data.timestamp,
+        });
     }
 
-    onRecvError(ev) {
+    onError(ev) {
         debugger;
-        for (const ws of this.wsClients.keys()) {
-            ws.send('message', ev);
-        }
-    }
-
-    async onOutgoingPost(req, res) {
-        const sender = await relay.MessageSender.factory();
-        return await sender.send(req.body);
+        this.socketNS.emit('error', ev);
     }
 }
 

@@ -1,6 +1,8 @@
 const io = require('socket.io-client');
 
+//const socket = io.connect('http://localhost:8086/');
 const socket = io.connect('http://localhost:8086/messages/incoming/v1');
+//const socket = io.connect('http://localhost:8086/messages/incoming/v2');
 socket.on('connect', (a, b, c) => {
     debugger;
     console.log("connect", a, b, c);
@@ -8,6 +10,14 @@ socket.on('connect', (a, b, c) => {
 socket.on('event', (a, b, c) => {
     debugger;
     console.log("eVent", a, b, c);
+});
+socket.on('sent', data => {
+    debugger;
+    console.log("Sent", data.message, data.attachments[0].data);
+});
+socket.on('message', (a, b, c) => {
+    debugger;
+    console.log("MSG", a, b, c);
 });
 socket.on('disconnect', (a, b, c) => {
     debugger;
