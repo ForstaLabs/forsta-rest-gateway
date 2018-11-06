@@ -12,12 +12,12 @@ socket.on('event', (a, b, c) => {
     console.log("eVent", a, b, c);
 });
 socket.on('sent', data => {
-    debugger;
-    console.log("Sent", data.message, data.attachments[0].data);
+    const a = data.attachments[0];
+    console.log("GOT SENT", data, a && a.data);
 });
-socket.on('message', (a, b, c) => {
-    debugger;
-    console.log("MSG", a, b, c);
+socket.on('message', data => {
+    const a = data.attachments[0];
+    console.log("GOT MSG", data, a && a.data);
 });
 socket.on('disconnect', (a, b, c) => {
     debugger;

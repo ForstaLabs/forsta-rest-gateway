@@ -37,9 +37,19 @@ class IncomingV1 {
         });
     }
 
-    onMessage(ev) {
-        debugger;
-        this.socketNS.emit('message', ev);
+    async onMessage(ev) {
+        for (const x of ev.data.message.attachments) {
+            x.data = await this.reciever.fetchAttachment(x);
+        }
+        this.socketNS.emit('message', {
+            expirationStartTimestamp: ev.data.expirationStartTimestamp,
+            body: JSON.parse(ev.data.message.body),
+            attachments: ev.data.message.attachments,
+            source: ev.data.source,
+            sourceDevice: ev.data.sourceDevice,
+            timestamp: ev.data.timestamp,
+        });
+
     }
 
     async onSent(ev) {
