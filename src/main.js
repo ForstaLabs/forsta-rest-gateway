@@ -4,6 +4,7 @@ const express = require('@feathersjs/express');
 const feathers = require('@feathersjs/feathers');
 const morgan = require('morgan');
 const process = require('process');
+const relay = require('librelay');
 const socketio = require('@feathersjs/socketio');
 
 const port = process.env.PORT || '8086';
@@ -21,6 +22,7 @@ process.on('unhandledRejection', ev => {
 
 
 async function main() {
+    await relay.storage.initialize();
     const app = express(feathers());
     app.use(morgan('dev'));  // logging
     app.use(express.json());
