@@ -13,12 +13,11 @@ class DevicesV1 {
     }
 
     async create(data, params) {
-        const name = data.name;  // XXX use request headers if not present.
+        const name = data.name || req.headers['user-agent'].split(/[\s/-]/)[0];
         const autoProvision = data.autoProvision;
         const id = uuid4();
         const result = await relay.registerDevice({name, autoProvision});
         registerResults.set(id, result);
-        debugger;
         return {
             registeringId: id,
             registeringUrn: `/devices/registering/v1/${id}`
