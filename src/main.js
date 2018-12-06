@@ -34,6 +34,7 @@ async function main() {
     app.use('/account/v1', new api.account.AccountV1());
     app.use('/devices/v1', new api.devices.DevicesV1());
     app.use('/devices/registering/v1', new api.devices.DevicesRegisteringV1());
+    app.use('/storage/state/v1', new api.storage.StateV1());
     app.use(express.errorHandler());
     app.listen(port, listenAddr);
 }
