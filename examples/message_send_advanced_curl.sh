@@ -1,0 +1,1 @@
+curl -X POST http://localhost:8086/messages/outgoing/v1/ -H 'content-type: application/json' -d '{"distribution": {"universal": "(<ffffffff-aaaa-bbbb-cccc-dddddddddddd>)", "userids": ["00000000-1111-2222-3333-444444444444"]}, "text": "Hello There"}'
