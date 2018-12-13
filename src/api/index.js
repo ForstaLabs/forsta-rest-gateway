@@ -3,6 +3,7 @@ const devices = require('./devices');
 const auth = require('./auth');
 const messages = require('./messages');
 const storage = require('./storage');
+const tags = require('./tags');
 
 
 module.exports = {
@@ -11,4 +12,5 @@ module.exports = {
     auth,
     messages,
     storage,
+    tags,
 };
