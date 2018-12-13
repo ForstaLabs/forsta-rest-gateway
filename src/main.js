@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 
 const api = require('./api');
 const express = require('@feathersjs/express');
