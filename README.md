@@ -21,3 +21,8 @@ by design as the rest gateway should run as a *sidecar* to your application.
 ### NPM
     npm install -g relay-rest-gateway
     relay-rest-gateway
+
+
+Examples
+--------
+For now just browse the examples folder:  [All Examples](examples/)
