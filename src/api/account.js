@@ -9,7 +9,7 @@ class AccountV1 {
     }
 
     async create(data, params) {
-        const name = data.name || req.headers['user-agent'].split(/[\s/-]/)[0];
+        const name = data.name || 'relay-rest-gateway';
         await relay.registerAccount({name});
         return null;  // 204 No Countent
     }

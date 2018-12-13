@@ -13,7 +13,7 @@ class DevicesV1 {
     }
 
     async create(data, params) {
-        const name = data.name || req.headers['user-agent'].split(/[\s/-]/)[0];
+        const name = data.name || 'relay-rest-gateway';
         const autoProvision = data.autoProvision;
         const id = uuid4();
         const result = await relay.registerDevice({name, autoProvision});
