@@ -4,6 +4,7 @@ const auth = require('./auth');
 const messages = require('./messages');
 const storage = require('./storage');
 const tags = require('./tags');
+const users = require('./users');
 
 
 module.exports = {
@@ -13,4 +14,5 @@ module.exports = {
     messages,
     storage,
     tags,
+    users,
 };
