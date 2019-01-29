@@ -10,6 +10,7 @@ const expressWs = require('express-ws');
 
 const port = process.env.PORT || '8086';
 const listenAddr = process.env.LISTEN_ADDR || '127.0.0.1';
+const atlasUrl = process.env.ATLAS_URL;
 
 
 let _rejectCount = 0;
@@ -39,7 +40,7 @@ async function main() {
             next(e);
         }
     });
-    app.use('/auth/v1', new api.auth.AuthV1());
+    app.use('/auth/v1', new api.auth.AuthV1({atlasUrl}));
     app.use('/account/v1', new api.account.AccountV1());
     app.use('/devices/v1', new api.devices.DevicesV1());
     app.use('/devices/registering/v1', new api.devices.DevicesRegisteringV1());
@@ -48,6 +49,7 @@ async function main() {
     app.use('/users/v1', new api.users.UsersV1());
     app.use(express.errorHandler());
     app.listen(port, listenAddr);
+    console.info(`Listening at http://${listenAddr}:${port}`);
 }
 
 

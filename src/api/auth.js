@@ -4,8 +4,16 @@ const errors = require('@feathersjs/errors');
 
 class AuthV1 {
 
+    constructor({atlasUrl}) {
+        this.atlasOptions = {};
+        if (atlasUrl) {
+            this.atlasOptions.url = atlasUrl;
+        }
+    }
+
     async get(userTag, params) {
-        const challenge = await relay.AtlasClient.requestAuthentication(userTag);
+        const challenge = await relay.AtlasClient.requestAuthentication(userTag,
+                                                                        this.atlasOptions);
         return {
             type: challenge.type
         };
@@ -22,7 +30,8 @@ class AuthV1 {
                 throw new errors.BadRequest('Missing `password` value');
             }
             try {
-                await relay.AtlasClient.authenticateViaPassword(userTag, password);
+                await relay.AtlasClient.authenticateViaPassword(userTag, password,
+                                                                this.atlasOptions);
             } catch(e) {
                 if (e instanceof relay.errors.ProtocolError) {
                     throw new errors.BadRequest({
@@ -41,7 +50,7 @@ class AuthV1 {
                 throw new errors.BadRequest('Missing `code` value');
             }
             try {
-                await relay.AtlasClient.authenticateViaCode(userTag, code);
+                await relay.AtlasClient.authenticateViaCode(userTag, code, this.atlasOptions);
             } catch(e) {
                 if (e instanceof relay.errors.ProtocolError) {
                     throw new errors.BadRequest({
@@ -64,7 +73,8 @@ class AuthV1 {
                 throw new errors.BadRequest('Missing `otp` value');
             }
             try {
-                await relay.AtlasClient.authenticateViaPasswordOtp(userTag, password, otp);
+                await relay.AtlasClient.authenticateViaPasswordOtp(userTag, password, otp,
+                                                                   this.atlasOptions);
             } catch(e) {
                 if (e instanceof relay.errors.ProtocolError) {
                     throw new errors.BadRequest({
