@@ -1,5 +1,4 @@
 const relay = require('librelay');
-const errors = require('@feathersjs/errors');
 
 
 class StateV1 {

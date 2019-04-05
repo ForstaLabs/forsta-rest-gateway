@@ -1,4 +1,5 @@
 const errors = require('@feathersjs/errors');
+const factory = require('../factory');
 const relay = require('librelay');
 const uuid4 = require('uuid/v4');
 
@@ -16,7 +17,13 @@ class DevicesV1 {
         const name = data.name || 'relay-rest-gateway';
         const autoProvision = data.autoProvision;
         const id = uuid4();
+        console.warn("Creating new device in an existing account...");
         const result = await relay.registerDevice({name, autoProvision});
+        result.done.then(() => {
+            console.warn("Destroying any existing signal connections...");
+            factory.destroyMessageReceiver();
+            factory.destroyMessageSender();
+        });
         registerResults.set(id, result);
         return {
             registeringId: id,
