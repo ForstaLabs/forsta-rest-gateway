@@ -1,10 +1,19 @@
 relay-rest-gateway
 ========
+REST API for Forsta librelay-node
 
+[![NPM](https://img.shields.io/npm/v/relay-rest-gateway.svg)](https://www.npmjs.com/package/relay-rest-gateway)
+[![License](https://img.shields.io/npm/l/relay-rest-gateway.svg)](https://github.com/ForstaLabs/relay-rest-gateway)
+
+
+About
+--------
 The relay-rest-gateway service provides a language agnostic interface to
 external software projects via a HTTP REST API.  Applications that are not
 compatible with the GPL3 can then safely make use of the Forsta Messaging
 platform without tainting their licensing.
+
+See https://github.com/ForstaLabs/librelay-node for more information.
 
 
 Running
