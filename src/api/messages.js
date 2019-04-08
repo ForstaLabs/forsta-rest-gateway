@@ -1,4 +1,5 @@
 const factory = require('../factory');
+const queueAsync = require('../queue_async');
 
 
 class OutgoingV1 {
@@ -13,12 +14,22 @@ class IncomingV1 {
 
     constructor(ws) {
         this.clients = new Set();
+        this._queuedEvents = [];
+        this._id = `api-incoming-messages-v1-${parseInt(Number.MAX_SAFE_INTEGER * Math.random())}`;
     }
 
-    publish(event, data) {
+    publish(event, data, options={}) {
+        return queueAsync(this._id + '-publish', () => this._publish(event, data, options));
+    }
+
+    async _publish(event, data, {prehook}) {
         if (!this.clients.size) {
-            console.warn(`Ignoring ${event} event.  No clients are connected.`);
+            console.warn(`Queuing ${event} event.  No clients are connected.`);
+            this._queuedEvents.push({event, data, prehook});
             return;
+        }
+        if (prehook) {
+            await prehook(event, data);
         }
         const payload = JSON.stringify({event, data});
         console.info(`Publishing ${event} event to ${this.clients.size} client(s).`);
@@ -27,72 +38,105 @@ class IncomingV1 {
         }
     }
 
-    async onConnection(ws, req) {
-        this.clients.add(ws);
-        if (!this.reciever) {
-            this.reciever = await factory.getMessageReceiver();
-            this.reciever.addEventListener('keychange', this.onKeyChange.bind(this));
-            this.reciever.addEventListener('message', this.onMessage.bind(this));
-            this.reciever.addEventListener('receipt', this.onReceipt.bind(this));
-            this.reciever.addEventListener('sent', this.onSent.bind(this));
-            this.reciever.addEventListener('read', this.onRead.bind(this));
-            this.reciever.addEventListener('closingsession', this.onClosingSession.bind(this));
-            this.reciever.addEventListener('error', this.onError.bind(this));
-            this.reciever.addEventListener('close', this.onClose.bind(this));
-            await this.reciever.connect();
-        }
+    onConnection(ws, req) {
         console.info("Client connected:", req.ip);
+        this.clients.add(ws);
         ws.on('close', () => {
             console.warn("Client disconnected: ", req.ip);
             this.clients.delete(ws);
+            if (!this.clients.size && this.receiver) {
+                console.warn("Last client disconnected: Shutting down message receiver");
+                this.receiver = null;
+                factory.destroyMessageReceiver();
+            }
         });
+        return queueAsync(this._id + '-connection', () => this._handleConnection(ws, req));
+    }
+
+    async _handleConnection(ws, req) {
+        while (this._queuedEvents.length) {
+            const desc = this._queuedEvents.shift();
+            console.warn(`Publishing queued event: ${this._queuedEvents.length} remaining.`);
+            // Note the first client to connect is likely to get all the queued messages.
+            // The system is essentially optimized for a single consumer as of yet.
+            await this.publish(desc.event, desc.data, {prehook: desc.prehook});
+        }
+        if (!this.receiver) {
+            console.info("Starting new message receiver...");
+            this.receiver = await factory.getMessageReceiver();
+            console.info("  Atlas URL:", this.receiver.atlas.url);
+            console.info("  Signal URL:", this.receiver.signal.url);
+            this.receiver.addEventListener('keychange', this.onKeyChange.bind(this));
+            this.receiver.addEventListener('message', this.onMessage.bind(this));
+            this.receiver.addEventListener('receipt', this.onReceipt.bind(this));
+            this.receiver.addEventListener('sent', this.onSent.bind(this));
+            this.receiver.addEventListener('read', this.onRead.bind(this));
+            this.receiver.addEventListener('closingsession', this.onClosingSession.bind(this));
+            this.receiver.addEventListener('error', this.onError.bind(this));
+            this.receiver.addEventListener('close', this.onClose.bind(this));
+            await this.receiver.connect();
+            console.info("Message receiver connected.");
+        }
     }
 
     async onKeyChange(ev) {
-        // XXX TBD  Probably just autoaccept for now.
-        debugger;
-        console.error("`keychange` event not handled");
+        // XXX TBD  Probably just auto accept for now.
+        console.error("`keychange` event not properly exposed: Auto accepting key change! DANGEROUS");
+        await ev.accept();
+    }
+
+    async fetchAttachmentsPrehook(ev, data) {
+        const pointers = data.attachmentPointers;
+        delete data.attachmentPointers;
+        if (!pointers.length) {
+            return;
+        }
+        console.info(`Fetching ${pointers.length} attachment(s)...`);
+        data.attachments = [];
+        for (const p of pointers) {
+            const buf = await this.receiver.fetchAttachment(p);
+            data.attachments.push({
+                id: p.id.toString(),
+                contentType: p.contentType,
+                data: buf.toString('base64')
+            });
+        }
+        console.debug('Finished attachment(s) fetch.');
     }
 
     async onMessage(ev) {
-        for (const x of ev.data.message.attachments) {
-            x.data = await this.reciever.fetchAttachment(x);
-        }
-        this.publish('message', {
+        await this.publish('message', {
             expirationStartTimestamp: ev.data.expirationStartTimestamp,
             body: JSON.parse(ev.data.message.body),
-            attachments: ev.data.message.attachments,
+            attachmentPointers: ev.data.message.attachments,
             source: ev.data.source,
             sourceDevice: ev.data.sourceDevice,
             timestamp: ev.data.timestamp,
-        });
+        }, {prehook: this.fetchAttachmentsPrehook.bind(this)});
+    }
+
+    async onSent(ev) {
+        await this.publish('sent', {
+            destination: ev.data.destination,
+            expirationStartTimestamp: ev.data.expirationStartTimestamp,
+            body: JSON.parse(ev.data.message.body),
+            attachmentPointers: ev.data.message.attachments,
+            source: ev.data.source,
+            sourceDevice: ev.data.sourceDevice,
+            timestamp: ev.data.timestamp,
+        }, {prehook: this.fetchAttachmentsPrehook.bind(this)});
     }
 
     async onReceipt(ev) {
-        this.publish('receipt', {
+        await this.publish('receipt', {
             source: ev.proto.source,
             sourceDevice: ev.proto.sourceDevice,
             timestamp: ev.proto.timestamp,
         });
     }
 
-    async onSent(ev) {
-        for (const x of ev.data.message.attachments) {
-            x.data = await this.reciever.fetchAttachment(x);
-        }
-        this.publish('sent', {
-            destination: ev.data.destination,
-            expirationStartTimestamp: ev.data.expirationStartTimestamp,
-            body: JSON.parse(ev.data.message.body),
-            attachments: ev.data.message.attachments,
-            source: ev.data.source,
-            sourceDevice: ev.data.sourceDevice,
-            timestamp: ev.data.timestamp,
-        });
-    }
-
     async onRead(ev) {
-        this.publish('read', {
+        await this.publish('read', {
             sender: ev.read.sender,
             source: ev.read.source,
             sourceDevice: ev.read.sourceDevice,
@@ -103,20 +147,23 @@ class IncomingV1 {
 
     async onClosingSession(ev) {
         // XXX TBD
-        debugger;
         console.error("`closingsession` event not handled");
     }
 
-    onError(ev) {
-        this.publish('error', {ev});
+    async onError(ev) {
+        await this.publish('error', {ev});
     }
 
     onClose(ev) {
-        this.publish('close', {ev});
-        console.warn("Message Receiver was closed: Shutting down client connections");
-        this.reciever = null;
-        for (const x of this.clients) {
-            x.close();
+        console.warn("Message Receiver closed");
+        if (this.receiver) {
+            this.receiver = null;
+            if (this.clients.size) {
+                console.warn(`Shutting down ${this.clients.size} client connections...`);
+                for (const x of this.clients) {
+                    x.close();
+                }
+            }
         }
     }
 }
